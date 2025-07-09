@@ -1,5 +1,3 @@
-package org.example;
-
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.After;
 import org.junit.Before;
@@ -10,9 +8,12 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
 import java.time.Duration;
 import java.util.Set;
+
 import static org.junit.Assert.*;
+
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.JavascriptExecutor;
 
@@ -150,22 +151,18 @@ public class AutoTestsBSPB {
     public void currencyExchange_DollarsToRubles_Test() {
         driver.get(BSPB_URL);
 
-        // 1. Клик по ссылке "Финансовые рынки"
         WebElement financialMarketsLink = wait.until(ExpectedConditions.elementToBeClickable(By.linkText("Финансовые рынки")));
         financialMarketsLink.click();
         wait.until(ExpectedConditions.urlContains("/finance"));
 
-        // 2. Клик по кнопке "Обмен наличной валюты"
         WebElement cashExchangeButton = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button[id^='tabs-'][id$='--tab-0']")));
         cashExchangeButton.click();
 
-        // 3. Клик по "Узнать подробнее"
         WebElement detailedInformation = wait.until(ExpectedConditions.elementToBeClickable(
                 By.partialLinkText("Узнать подробнее")));
         detailedInformation.click();
         wait.until(ExpectedConditions.urlContains("/exchange"));
 
-        // Прокрутка страницы
         js.executeScript("window.scrollBy(0, 1350);");
 
         try {
@@ -174,15 +171,12 @@ public class AutoTestsBSPB {
             Thread.currentThread().interrupt();
         }
 
-        // Ожидание видимости поля ввода
-        WebElement inputField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id(" -$first")));
+        WebElement inputField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//input[@type='text' and @inputmode='decimal']")));
 
-        // Очистка и ввод значения
         inputField.sendKeys(Keys.CONTROL + "a");
         inputField.sendKeys(Keys.DELETE);
         inputField.sendKeys("10");
 
-        // Проверка URL и значения в поле
         assertTrue("URL должен содержать '/exchange'", driver.getCurrentUrl().contains("/exchange"));
         assertEquals("Значение в поле должно быть '100.00'", "100.00", inputField.getAttribute("value"));
     }
@@ -249,18 +243,18 @@ public class AutoTestsBSPB {
 
         String mainWindowHandle = driver.getWindowHandle();
         wait.until(ExpectedConditions.numberOfWindowsToBe(2));
-            for (String handle : driver.getWindowHandles()) {
-                if (!handle.equals(mainWindowHandle)) {
-                    driver.switchTo().window(handle);
-                    break;
-                }
+        for (String handle : driver.getWindowHandles()) {
+            if (!handle.equals(mainWindowHandle)) {
+                driver.switchTo().window(handle);
+                break;
             }
+        }
         WebElement header = driver.findElement(By.xpath("//h2[contains(., 'Вход в интернет-банк')]"));
         assertEquals("Текст заголовка не совпадает", "Вход в интернет-банк", header.getText());
     }
 
     @Test
-    public void BecomeCustomer_Test () {
+    public void BecomeCustomer_Test() {
         driver.get(BSPB_URL);
         WebElement LoginButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("popover-trigger-:R3adt9jltmH1:")));
         LoginButton.click();
@@ -271,12 +265,12 @@ public class AutoTestsBSPB {
 
         String mainWindowHandle = driver.getWindowHandle();
         wait.until(ExpectedConditions.numberOfWindowsToBe(2));
-            for (String handle : driver.getWindowHandles()) {
-                if (!handle.equals(mainWindowHandle)) {
-                    driver.switchTo().window(handle);
-                    break;
-                }
+        for (String handle : driver.getWindowHandles()) {
+            if (!handle.equals(mainWindowHandle)) {
+                driver.switchTo().window(handle);
+                break;
             }
+        }
         WebElement becomeClientLink = wait.until(ExpectedConditions.elementToBeClickable(By.linkText("Стать клиентом")));
         becomeClientLink.click();
 
