@@ -65,7 +65,7 @@ public class AutoTestsBSPB {
 
         // 1. Открываем меню выбора региона
         WebElement regionMenuButton = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//button[./span/p[text()='Вне региона']]")));
+                By.id("menu-button-:R2tad9jltmH1:")));
         regionMenuButton.click();
 
         // 2. Выбираем Калининград из списка
