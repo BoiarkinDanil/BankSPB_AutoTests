@@ -1,17 +1,17 @@
 package org.example.runners;
 
-import org.junit.runner.RunWith;
-import io.cucumber.junit.Cucumber;
-import io.cucumber.junit.CucumberOptions;
+import org.junit.platform.suite.api.ConfigurationParameter;
+import org.junit.platform.suite.api.IncludeEngines;
+import org.junit.platform.suite.api.SelectClasspathResource;
+import org.junit.platform.suite.api.Suite;
 
-@RunWith(Cucumber.class)
-@CucumberOptions(
-        features = "src/test/resources/features",
-        glue = "org.example.steps",
-        plugin = {"pretty", "html:target/cucumber-reports/cucumber-html-report.html", "json:target/cucumber-reports/cucumber.json"},
-        snippets = CucumberOptions.SnippetType.CAMELCASE,
-        monochrome = true
-)
+import static io.cucumber.junit.platform.engine.Constants.*;
+
+@Suite
+@IncludeEngines("cucumber")
+@SelectClasspathResource("features")
+@ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "org.example.steps")
+@ConfigurationParameter(key = PLUGIN_PROPERTY_NAME,
+        value = "pretty, html:target/cucumber-reports/cucumber.html")
 public class CucumberRunner {
-
 }
