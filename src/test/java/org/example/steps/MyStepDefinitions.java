@@ -3,6 +3,7 @@ package org.example.steps;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.cucumber.java.Before;
 import io.cucumber.java.After;
+import org.example.data.Users;
 import org.example.utility.DriverUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -17,7 +18,9 @@ import java.time.Duration;
 import java.util.Set;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.JavascriptExecutor;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
+import org.assertj.core.api.SoftAssertions;
+
 
 public class MyStepDefinitions {
     private WebDriver driver;
@@ -80,7 +83,7 @@ public class MyStepDefinitions {
     public void регион_должен_измениться_на(String expectedRegion) {
         WebElement regionText = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//button[./span/p[text()='Калининград']]")));
-        assertEquals("Калининград", regionText.getText(), "Регион должен измениться на Калининград");
+        assertThat(regionText.getText()).as("Регион должен измениться на Калининград").isEqualTo("Калининград");
     }
 
     @Когда("я перехожу в раздел {string}")
@@ -128,8 +131,7 @@ public class MyStepDefinitions {
     public void я_должен_найти_офис(String expectedOfficeName) {
         WebElement header = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//h3[contains(text(), '" + expectedOfficeName + "')]")));
-        assertEquals(expectedOfficeName, header.getText(),
-                "Заголовок найденного офиса должен быть '" + expectedOfficeName + "'");
+        assertThat(header.getText()).isEqualTo(expectedOfficeName).withFailMessage("Заголовок найденного офиса должен быть '" + expectedOfficeName + "'");
     }
 
     @Когда("я кликаю по ссылке {string}")
@@ -150,8 +152,9 @@ public class MyStepDefinitions {
     @Тогда("я должен быть на странице {string}")
     public void я_должен_быть_на_странице(String expectedUrl) {
         wait.until(ExpectedConditions.urlToBe(expectedUrl));
-        assertEquals(expectedUrl, driver.getCurrentUrl(),
-                "URL должен соответствовать ожидаемой странице");
+        assertThat(driver.getCurrentUrl())
+                .isEqualTo(expectedUrl)
+                .withFailMessage("URL должен соответствовать ожидаемой странице");
     }
 
     @Когда("я кликаю на стрелку для раскрытия меню")
@@ -196,8 +199,8 @@ public class MyStepDefinitions {
     @Тогда("я должен увидеть заголовок Вход в интернет банк")
     public void я_должен_увидеть_заголовок_Вход_в_интернет_банк() {
         WebElement header = driver.findElement(By.xpath("//h2[contains(., 'Вход в интернет-банк')]"));
-        assertEquals("Вход в интернет-банк", header.getText(),
-                "Текст заголовка не совпадает");
+        assertThat(header.getText()).isEqualTo("Вход в интернет-банк")
+                .withFailMessage("Текст заголовка не совпадает");
     }
 
     @Когда("я кликаю по иконке поиска")
@@ -219,7 +222,74 @@ public class MyStepDefinitions {
     public void поле_поиска_должно_содержать_текст(String expectedText) {
         WebElement searchInputField = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.cssSelector("input[placeholder='Введите поисковый запрос']")));
-        assertEquals(expectedText, searchInputField.getAttribute("value"),
-                "Текст в поле ввода должен соответствовать введенному запросу");
+        assertThat(searchInputField.getAttribute("value")).isEqualTo(expectedText);
     }
+
+    @Тогда("Данные пользователя не совпадают")
+    public void данные_пользователя_не_совпадают() {
+        Users firstUser = Users.builder()
+                .firstName("victor")
+                .lastName("daniel")
+                .email("vd@gmail.com")
+                .password("qwerty123")
+                .age(30)
+                .gender(0)
+                .active(true)
+                .build();
+
+        Users secondUser = Users.builder()
+                .firstName("victor")
+                .lastName("daniel")
+                .email("vd@gmail.com")
+                .password("qwerty123")
+                .age(31)
+                .gender(0)
+                .active(true)
+                .build();
+
+        SoftAssertions softly = new SoftAssertions();
+
+        softly.assertThat(secondUser.getFirstName()).as("Проверка имени").isEqualTo(firstUser.getFirstName());
+        softly.assertThat(secondUser.getLastName()).as("Проверка фамилии").isEqualTo(firstUser.getLastName());
+        softly.assertThat(secondUser.getEmail()).as("Проверка email").isEqualTo(firstUser.getEmail());
+        softly.assertThat(secondUser.getPassword()).as("Проверка пароля").isEqualTo(firstUser.getPassword());
+        softly.assertThat(secondUser.getAge()).as("Проверка возраста").isEqualTo(firstUser.getAge());
+        softly.assertThat(secondUser.getGender()).as("Проверка пола").isEqualTo(firstUser.getGender());
+        softly.assertThat(secondUser.getActive()).as("Проверка активности").isEqualTo(firstUser.getActive());
+        softly.assertAll();
+    }
+
+    @Тогда("Данные пользователя совпадают")
+    public void данные_пользователя_совпадают() {
+        Users firstUser = Users.builder()
+                .firstName("victor")
+                .lastName("daniel")
+                .email("vd@gmail.com")
+                .password("qwerty123")
+                .age(30)
+                .gender(0)
+                .active(true)
+                .build();
+
+        Users secondUser = Users.builder()
+                .firstName("victor")
+                .lastName("daniel")
+                .email("vd@gmail.com")
+                .password("qwerty123")
+                .age(30)
+                .gender(0)
+                .active(true)
+                .build();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(secondUser.getFirstName()).as("Проверка имени").isEqualTo(firstUser.getFirstName());
+        softly.assertThat(secondUser.getLastName()).as("Проверка фамилии").isEqualTo(firstUser.getLastName());
+        softly.assertThat(secondUser.getEmail()).as("Проверка email").isEqualTo(firstUser.getEmail());
+        softly.assertThat(secondUser.getPassword()).as("Проверка пароля").isEqualTo(firstUser.getPassword());
+        softly.assertThat(secondUser.getAge()).as("Проверка возраста").isEqualTo(firstUser.getAge());
+        softly.assertThat(secondUser.getGender()).as("Проверка пола").isEqualTo(firstUser.getGender());
+        softly.assertThat(secondUser.getActive()).as("Проверка активности").isEqualTo(firstUser.getActive());
+        softly.assertAll();
+    }
+
 }
