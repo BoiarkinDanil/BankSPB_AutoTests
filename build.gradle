@@ -1,15 +1,21 @@
 plugins {
     id 'java'
-    id 'io.freefair.lombok' version '8.6'
     id 'io.qameta.allure' version '2.11.0'
 }
 
-ext {
-    allureVersion = '2.24.0'
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+    withJavadocJar()
+    withSourcesJar()
 }
 
-
-def aspectJVersion = '1.9.21'
+repositories {
+    mavenCentral()
+}
 
 configurations {
     agent {
@@ -18,62 +24,68 @@ configurations {
     }
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
-repositories {
-    mavenCentral()
-}
+def allureVersion = "2.24.0"
+def aspectJVersion = '1.9.24'
 
 dependencies {
     agent "org.aspectj:aspectjweaver:$aspectJVersion"
     testImplementation 'io.github.bonigarcia:webdrivermanager:5.6.3'
-    testImplementation 'org.seleniumhq.selenium:selenium-java:4.31.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
-    testImplementation 'io.cucumber:cucumber-java:7.18.0'
-    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.18.0'
     testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
-    testImplementation 'ch.qos.logback:logback-classic:1.4.11'
-    testImplementation 'org.assertj:assertj-core:3.24.2'
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
-    testCompileOnly 'org.projectlombok:lombok:1.18.30'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.34.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
+    implementation 'org.projectlombok:lombok:1.18.38'
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
+
+    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation 'io.cucumber:cucumber-java:7.23.0'
+    implementation 'net.bytebuddy:byte-buddy:1.17.6'
+
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.23.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.3'
+    testRuntimeOnly    'org.junit.jupiter:junit-jupiter-engine:5.13.3'
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.13.3'
+
+    testImplementation 'org.assertj:assertj-core:3.27.3'
+
+    testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
+
+    testImplementation 'io.qameta.allure:allure-cucumber7-jvm'
+    testImplementation 'io.qameta.allure:allure-junit5'
+    testImplementation 'io.qameta.allure:allure-assertj'
+    testImplementation "io.qameta.allure:allure-junit-platform"
+
     testImplementation 'io.rest-assured:rest-assured:5.5.5'
 
-    // Simplified Allure configuration
-    testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
-    testImplementation 'io.qameta.allure:allure-junit5'
-    testImplementation 'io.qameta.allure:allure-cucumber7-jvm'
-    testImplementation 'io.qameta.allure:allure-rest-assured'
+    testImplementation 'ch.qos.logback:logback-classic:1.5.16'
+
+
 }
 
-tasks.test {
-    jvmArgs = [ "-javaagent:${configurations.agent.singleFile}" ]
+test {
+    jvmArgs = [ "-javaagent:${configurations.agent.singleFile}",
+                "-Daj.weaving.dump.dir=build/aspectj-logs",
+                "-noverify"]
+}
+
+tasks.withType(Test).configureEach {
+    systemProperty 'file.encoding', 'UTF-8'
     useJUnitPlatform()
-    systemProperty 'cucumber.filter.tags', System.getProperty('cucumber.filter.tags', '')
-    systemProperty 'allure.results.directory', 'build/allure-results'
+    systemProperty "cucumber.filter.tags", System.getProperty("cucumber.filter.tags")
 }
 
-tasks.compileTestJava {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+    options.annotationProcessorPath = configurations.compileClasspath
 }
+
 
 allure {
-    version = allureVersion
     autoconfigure = true
-
-    adapter {
-        frameworks {
-            junit5 {
-                adapterVersion = allureVersion
-            }
-            cucumberJvm {
-                adapterVersion = allureVersion
-            }
-        }
+    useJUnit5 {
+        version = '2.24.0'
+    }
+    useCucumberJVM {
+        version = '7.23.0'
     }
 }
