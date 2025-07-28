@@ -1,0 +1,79 @@
+plugins {
+    id 'java'
+    id 'io.freefair.lombok' version '8.6'
+    id 'io.qameta.allure' version '2.11.0'
+}
+
+ext {
+    allureVersion = '2.24.0'
+}
+
+
+def aspectJVersion = '1.9.21'
+
+configurations {
+    agent {
+        canBeResolved = true
+        canBeConsumed = true
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    agent "org.aspectj:aspectjweaver:$aspectJVersion"
+    testImplementation 'io.github.bonigarcia:webdrivermanager:5.6.3'
+    testImplementation 'org.seleniumhq.selenium:selenium-java:4.31.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testImplementation 'io.cucumber:cucumber-java:7.18.0'
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.18.0'
+    testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
+    testImplementation 'ch.qos.logback:logback-classic:1.4.11'
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    testCompileOnly 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+    testImplementation 'io.rest-assured:rest-assured:5.5.5'
+
+    // Simplified Allure configuration
+    testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
+    testImplementation 'io.qameta.allure:allure-junit5'
+    testImplementation 'io.qameta.allure:allure-cucumber7-jvm'
+    testImplementation 'io.qameta.allure:allure-rest-assured'
+}
+
+tasks.test {
+    jvmArgs = [ "-javaagent:${configurations.agent.singleFile}" ]
+    useJUnitPlatform()
+    systemProperty 'cucumber.filter.tags', System.getProperty('cucumber.filter.tags', '')
+    systemProperty 'allure.results.directory', 'build/allure-results'
+}
+
+tasks.compileTestJava {
+    options.encoding = 'UTF-8'
+}
+
+allure {
+    version = allureVersion
+    autoconfigure = true
+
+    adapter {
+        frameworks {
+            junit5 {
+                adapterVersion = allureVersion
+            }
+            cucumberJvm {
+                adapterVersion = allureVersion
+            }
+        }
+    }
+}

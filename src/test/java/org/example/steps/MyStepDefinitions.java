@@ -3,10 +3,8 @@ package org.example.steps;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.cucumber.java.Before;
 import io.cucumber.java.After;
-import org.example.utility.DriverUtils;
-import org.openqa.selenium.By;
+import org.example.data.Users;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -14,212 +12,164 @@ import io.cucumber.java.ru.Дано;
 import io.cucumber.java.ru.Когда;
 import io.cucumber.java.ru.Тогда;
 import java.time.Duration;
-import java.util.Set;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.JavascriptExecutor;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
+import org.example.pages.MainPage;
+import org.example.pages.OfficesPage;
+import org.example.pages.LoginPage;
+import org.example.pages.SearchPage;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+
+
 
 public class MyStepDefinitions {
     private WebDriver driver;
+    private MainPage mainPage;
+    private OfficesPage officesPage;
+    private LoginPage loginPage;
+    private SearchPage searchPage;
     private WebDriverWait wait;
-    private static final String BSPB_URL = "https://www.bspb.ru";
-    private JavascriptExecutor js;
 
-    @Before
+    @Before("@web")
     public void setUp() {
         WebDriverManager.chromedriver().setup();
         driver = new ChromeDriver();
         driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-        js = (JavascriptExecutor) driver;
+        mainPage = new MainPage(driver);
+        officesPage = new OfficesPage(driver);
+        loginPage = new LoginPage(driver);
+        searchPage = new SearchPage(driver);
     }
 
-    @After
+    @After("@web")
     public void tearDown() {
         if (driver != null) {
             driver.quit();
         }
     }
 
-    private String switchToNewTab(Set<String> oldWindowHandles) {
-        wait.until(ExpectedConditions.numberOfWindowsToBe(oldWindowHandles.size() + 1));
-        Set<String> newWindowHandles = driver.getWindowHandles();
-        String newTabHandle = null;
-        for (String handle : newWindowHandles) {
-            if (!oldWindowHandles.contains(handle)) {
-                newTabHandle = handle;
-                break;
-            }
-        }
-        if (newTabHandle != null) {
-            driver.switchTo().window(newTabHandle);
-            return newTabHandle;
-        } else {
-            fail("Ошибка: Новая вкладка не была найдена после переключения.");
-            return null;
-        }
-    }
-
     @Дано("я открыл главную страницу БСПБ")
-    public void я_открыл_главную_страницу_БСПБ() {
-        driver.get(BSPB_URL);
+    public void openMainPage() {
+        mainPage.open();
     }
 
     @Когда("я выбираю регион {string}")
-    public void я_выбираю_регион(String regionName) {
-        WebElement regionMenuButton = wait.until(ExpectedConditions.elementToBeClickable(
-                By.id("menu-button-:R2tad9jltmH1:")));
-        regionMenuButton.click();
-        WebElement kaliningradOption = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//button[starts-with(@id, 'menu-list-') and text()='Калининград']")));
-        kaliningradOption.click();
+    public void selectRegion(String regionName) {
+        mainPage.selectRegion(regionName);
     }
 
     @Тогда("регион должен измениться на {string}")
-    public void регион_должен_измениться_на(String expectedRegion) {
-        WebElement regionText = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//button[./span/p[text()='Калининград']]")));
-        assertEquals("Калининград", regionText.getText(), "Регион должен измениться на Калининград");
+    public void verifyRegionChanged(String expectedRegion) {
+        assertThat(mainPage.getSelectedRegion()).isEqualTo(expectedRegion);
     }
 
     @Когда("я перехожу в раздел {string}")
     public void я_перехожу_в_раздел(String sectionName) {
-        WebElement link = wait.until(ExpectedConditions.elementToBeClickable(
-                By.partialLinkText(sectionName)));
-        link.click();
-        if (sectionName.equals("Офисы и банкоматы")) {
-            wait.until(ExpectedConditions.urlContains("/map"));
-        } else if (sectionName.equals("Инвесторам")) {
-            wait.until(ExpectedConditions.urlContains("/investors"));
-        } else if (sectionName.equals("Финансовые рынки")) {
-            wait.until(ExpectedConditions.urlContains("/finance"));
-        } else if (sectionName.equals("ВЭД")) {
-            wait.until(ExpectedConditions.urlContains("/foreign-trade"));
-        } else if (sectionName.equals("Бизнесу")) {
-            wait.until(ExpectedConditions.urlContains("/business"));
-        }
+        mainPage.navigateToSection(sectionName);
     }
 
     @Когда("я выбираю отображение {string} списком")
-    public void я_выбираю_отображение_списком(String displayType) {
-        WebElement listModeButton = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//span[contains(@class, 'radio__label') and contains(text(), 'Списком')]")));
-        listModeButton.click();
+    public void switchToListView(String displayType) {
+        officesPage.switchToListView();
     }
 
     @Когда("я ищу офис по адресу {string}")
-    public void я_ищу_офис_по_адресу(String address) {
-        WebElement searchAddress = wait.until(ExpectedConditions.elementToBeClickable(
-                By.cssSelector("input[placeholder*='Поиск по адресу']")));
-        searchAddress.sendKeys(address);
-        searchAddress.sendKeys(Keys.ENTER);
+    public void searchOffice(String address) {
+        officesPage.searchOffice(address);
     }
 
     @Когда("я кликаю по тексту {string}")
-    public void я_кликаю_по_тексту(String Text) {
-        DriverUtils.moveToElement(driver, By.partialLinkText(Text));
-        WebElement creditsDiv = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//p[text()='на любые цели для вашего бизнеса']")));
-        creditsDiv.click();
+    public void clickOnText(String text) {
+        mainPage.clickOnText(text);
     }
 
     @Тогда("я должен найти офис {string}")
     public void я_должен_найти_офис(String expectedOfficeName) {
         WebElement header = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//h3[contains(text(), '" + expectedOfficeName + "')]")));
-        assertEquals(expectedOfficeName, header.getText(),
-                "Заголовок найденного офиса должен быть '" + expectedOfficeName + "'");
+        assertThat(header.getText()).isEqualTo(expectedOfficeName)
+                .withFailMessage("Заголовок найденного офиса должен быть '" + expectedOfficeName + "'");
     }
 
     @Когда("я кликаю по ссылке {string}")
-    public void я_кликаю_по_ссылке(String linkText) {
-        WebElement link = wait.until(ExpectedConditions.elementToBeClickable(
-                By.partialLinkText(linkText)));
-        link.click();
+    public void clickLink(String linkText) {
+        mainPage.clickLink(linkText);
     }
 
     @Когда("я кликаю на кнопку {string}")
-    public void я_кликаю_на_кнопку(String buttonText) {
-        DriverUtils.moveToElement(driver, By.linkText(buttonText));
-        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(
-                By.linkText(buttonText)));
-        button.click();
+    public void clickButton(String buttonText) {
+        mainPage.clickButton(buttonText);
     }
 
     @Тогда("я должен быть на странице {string}")
     public void я_должен_быть_на_странице(String expectedUrl) {
         wait.until(ExpectedConditions.urlToBe(expectedUrl));
-        assertEquals(expectedUrl, driver.getCurrentUrl(),
-                "URL должен соответствовать ожидаемой странице");
+        assertThat(driver.getCurrentUrl())
+                .isEqualTo(expectedUrl)
+                .withFailMessage("URL должен соответствовать ожидаемой странице");
     }
 
     @Когда("я кликаю на стрелку для раскрытия меню")
-    public void я_кликаю_на_стрелку_для_раскрытия_меню() {
-        WebElement arrowDiv = wait.until(ExpectedConditions.elementToBeClickable(By.className("t-cover__arrow-svg")));
-        arrowDiv.click();
+    public void clickArrowButton() {
+        mainPage.clickArrowButton();
     }
 
     @Когда("я ввожу {string} в поле ввода валюты")
-    public void я_ввожу_в_поле_ввода_валюты(String value) {
-        WebElement inputField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//input[@type='text' and @inputmode='decimal']")));
-        inputField.sendKeys(Keys.CONTROL + "a");
-        inputField.sendKeys(Keys.DELETE);
-        inputField.sendKeys(value);
+    public void enterCurrencyValue(String value) {
+        mainPage.enterCurrencyValue(value);
     }
 
     @Когда("я кликаю на кнопку входа")
-    public void я_кликаю_на_кнопку_входа() {
-        WebElement LoginButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("popover-trigger-:R3adt9jltmH1:")));
-        LoginButton.click();
+    public void clickLoginButton() {
+        mainPage.clickLoginButton();
     }
 
     @Когда("я выбираю Интернет банк ФЛ")
-    public void я_выбираю_Интернет_банк_ФЛ() {
-        WebElement internetBankSpan = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//span[text()='Интернет-банк ФЛ']")));
-        internetBankSpan.click();
+    public void selectInternetBankFL() {
+        loginPage.selectInternetBankFL();
     }
 
     @Когда("я переключаюсь между вкладками")
-    public void я_переключаюсь_между_вкладками() {
-        String mainWindowHandle = driver.getWindowHandle();
-        wait.until(ExpectedConditions.numberOfWindowsToBe(2));
-        for (String handle : driver.getWindowHandles()) {
-            if (!handle.equals(mainWindowHandle)) {
-                driver.switchTo().window(handle);
-                break;
-            }
-        }
+    public void switchBetweenTabs() {
+        mainPage.switchToNewTab();
     }
 
     @Тогда("я должен увидеть заголовок Вход в интернет банк")
-    public void я_должен_увидеть_заголовок_Вход_в_интернет_банк() {
-        WebElement header = driver.findElement(By.xpath("//h2[contains(., 'Вход в интернет-банк')]"));
-        assertEquals("Вход в интернет-банк", header.getText(),
-                "Текст заголовка не совпадает");
+    public void verifyLoginHeader() {
+        assertThat(loginPage.getLoginHeaderText()).isEqualTo("Вход в интернет-банк");
     }
 
     @Когда("я кликаю по иконке поиска")
-    public void я_кликаю_по_иконке_поиска() {
-        WebElement searchIconLink = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//div[@class='css-35z2bt']/a[@href='/search']")
-        ));
-        searchIconLink.click();
+    public void clickSearchIcon() {
+        mainPage.clickSearchIcon();
     }
 
     @Когда("я ввожу поисковый запрос {string}")
-    public void я_ввожу_поисковый_запрос(String query) {
-        WebElement searchInputField = wait.until(ExpectedConditions.elementToBeClickable(
-                By.cssSelector("input[placeholder='Введите поисковый запрос']")));
-        searchInputField.sendKeys(query);
+    public void enterSearchQuery(String query) {
+        searchPage.enterSearchQuery(query);
     }
 
     @Тогда("поле поиска должно содержать текст {string}")
-    public void поле_поиска_должно_содержать_текст(String expectedText) {
-        WebElement searchInputField = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.cssSelector("input[placeholder='Введите поисковый запрос']")));
-        assertEquals(expectedText, searchInputField.getAttribute("value"),
-                "Текст в поле ввода должен соответствовать введенному запросу");
+    public void verifySearchFieldText(String expectedText) {
+        assertThat(searchPage.getSearchText()).isEqualTo(expectedText);
+    }
+
+    @Тогда("Данные пользователя не совпадают")
+    public void verifyUserDataNotMatch() {
+        Users firstUser = Users.builder().firstName("victor").lastName("daniel").email("vd@gmail.com")
+                .password("qwerty123").age(30).gender(0).active(true).build();
+        Users secondUser = Users.builder().firstName("victor").lastName("daniel").email("vd@gmail.com")
+                .password("qwerty123").age(31).gender(0).active(true).build();
+        assertThat(firstUser).usingRecursiveComparison().isEqualTo(secondUser);
+    }
+
+    @Тогда("Данные пользователя совпадают")
+    public void verifyUserDataMatch() {
+        Users firstUser = Users.builder().firstName("victor").lastName("daniel").email("vd@gmail.com")
+                .password("qwerty123").age(30).gender(0).active(true).build();
+        Users secondUser = Users.builder().firstName("victor").lastName("daniel").email("vd@gmail.com")
+                .password("qwerty123").age(30).gender(0).active(true).build();
+        assertThat(firstUser).usingRecursiveComparison().isEqualTo(secondUser);
     }
 }
