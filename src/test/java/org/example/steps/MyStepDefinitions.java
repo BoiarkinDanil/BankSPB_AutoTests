@@ -11,15 +11,17 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import io.cucumber.java.ru.Дано;
 import io.cucumber.java.ru.Когда;
 import io.cucumber.java.ru.Тогда;
+
 import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.*;
+
 import org.example.pages.MainPage;
 import org.example.pages.OfficesPage;
 import org.example.pages.LoginPage;
 import org.example.pages.SearchPage;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-
 
 
 public class MyStepDefinitions {

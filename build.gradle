@@ -17,18 +17,9 @@ repositories {
     mavenCentral()
 }
 
-configurations {
-    agent {
-        canBeResolved = true
-        canBeConsumed = true
-    }
-}
-
 def allureVersion = "2.24.0"
-def aspectJVersion = '1.9.24'
 
 dependencies {
-    agent "org.aspectj:aspectjweaver:$aspectJVersion"
     testImplementation 'io.github.bonigarcia:webdrivermanager:5.6.3'
     testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
     implementation 'org.seleniumhq.selenium:selenium-java:4.34.0'
@@ -62,8 +53,7 @@ dependencies {
 }
 
 test {
-    jvmArgs = [ "-javaagent:${configurations.agent.singleFile}",
-                "-Daj.weaving.dump.dir=build/aspectj-logs",
+    jvmArgs = [ "-Daj.weaving.dump.dir=build/aspectj-logs",
                 "-noverify"]
 }
 
