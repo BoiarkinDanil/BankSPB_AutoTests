@@ -53,8 +53,7 @@ dependencies {
 }
 
 test {
-    jvmArgs = [ "-Daj.weaving.dump.dir=build/aspectj-logs",
-                "-noverify"]
+    jvmArgs = [ "-Daj.weaving.dump.dir=build/aspectj-logs"]
 }
 
 tasks.withType(Test).configureEach {
