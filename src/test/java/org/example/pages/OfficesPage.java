@@ -11,7 +11,7 @@ import org.openqa.selenium.Keys;
 
 public class OfficesPage extends BasePage {
     private final By listViewButton = By.xpath("//span[contains(text(), 'Списком')]");
-    private final By searchInput = By.cssSelector("input[placeholder*='Поиск по адресу']");
+
 
     public OfficesPage(WebDriver driver) {
         super(driver);
@@ -28,8 +28,4 @@ public class OfficesPage extends BasePage {
         searchAddress.sendKeys(Keys.ENTER);
     }
 
-    public WebElement findOfficeHeader(String officeName) {
-        return wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//h3[contains(text(), '" + officeName + "')]")));
-    }
 }

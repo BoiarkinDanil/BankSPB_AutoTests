@@ -30,23 +30,17 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.16'
     implementation 'io.cucumber:cucumber-java:7.23.0'
     implementation 'net.bytebuddy:byte-buddy:1.17.6'
-
     testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.23.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.3'
     testRuntimeOnly    'org.junit.jupiter:junit-jupiter-engine:5.13.3'
     testImplementation 'org.junit.platform:junit-platform-launcher:1.13.3'
-
     testImplementation 'org.assertj:assertj-core:3.27.3'
-
     testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
-
     testImplementation 'io.qameta.allure:allure-cucumber7-jvm'
     testImplementation 'io.qameta.allure:allure-junit5'
     testImplementation 'io.qameta.allure:allure-assertj'
     testImplementation "io.qameta.allure:allure-junit-platform"
-
     testImplementation 'io.rest-assured:rest-assured:5.5.5'
-
     testImplementation 'ch.qos.logback:logback-classic:1.5.16'
 
 

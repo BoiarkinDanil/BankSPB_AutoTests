@@ -11,7 +11,7 @@ import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 
-public class GetRequest {
+public class GetRequestTest {
 
     private static final String API_URL = "https://www.bspb.ru/api/currency-service/office-rates";
 

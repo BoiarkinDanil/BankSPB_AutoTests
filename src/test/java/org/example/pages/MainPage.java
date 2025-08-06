@@ -101,8 +101,4 @@ public class MainPage extends BasePage {
     public void clickSearchIcon() {
         click(searchIcon);
     }
-
-    public void waitForUrl(String expectedUrl) {
-        wait.until(ExpectedConditions.urlToBe(expectedUrl));
-    }
 }

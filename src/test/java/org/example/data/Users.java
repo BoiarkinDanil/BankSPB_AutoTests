@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 @Builder
 public class Users {
-    private String firstName = "null";
+    private String firstName;
     private String lastName;
     private String email;
     private String password;
