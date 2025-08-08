@@ -13,6 +13,8 @@ import org.example.requests.GetExchangeOfficesRequest;
 import org.example.utility.JsonParser;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import io.cucumber.java.ru.Дано;
@@ -20,23 +22,27 @@ import io.cucumber.java.ru.Когда;
 import io.cucumber.java.ru.Тогда;
 import org.example.PojoModels.ExchangeOfficeModel;
 import org.example.PojoModels.Rate;
-
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
 import static org.assertj.core.api.Assertions.*;
-
 import org.example.pages.MainPage;
 import org.example.pages.OfficesPage;
 import org.example.pages.LoginPage;
 import org.example.pages.SearchPage;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.example.utility.DriverManager;
 
 
 public class MyStepDefinitions {
-    private WebDriver driver;
+    private RemoteWebDriver driver;
     private MainPage mainPage;
     private OfficesPage officesPage;
     private LoginPage loginPage;
@@ -45,9 +51,7 @@ public class MyStepDefinitions {
 
     @Before("@web")
     public void setUp() {
-        WebDriverManager.chromedriver().setup();
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
+        driver = DriverManager.getInstance().getDriver();
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
         mainPage = new MainPage(driver);
         officesPage = new OfficesPage(driver);
@@ -57,17 +61,15 @@ public class MyStepDefinitions {
 
     @After("@web")
     public void tearDown() {
-        if (driver != null) {
-            driver.quit();
-        }
+        DriverManager.getInstance().quitDriver();
     }
 
-    @Дано("я открыл главную страницу БСПБ")
+    @Дано("Пользователь открыл главную страницу БСПБ")
     public void openMainPage() {
         mainPage.open();
     }
 
-    @Когда("я выбираю регион {string}")
+    @Когда("Пользователь выбирает регион {string}")
     public void selectRegion(String regionName) {
         mainPage.selectRegion(regionName);
     }
@@ -77,95 +79,103 @@ public class MyStepDefinitions {
         assertThat(mainPage.getSelectedRegion()).isEqualTo(expectedRegion);
     }
 
-    @Когда("я перехожу в раздел {string}")
+    @Когда("Пользователь переходит в раздел {string}")
     public void я_перехожу_в_раздел(String sectionName) {
         mainPage.navigateToSection(sectionName);
     }
 
-    @Когда("я выбираю отображение {string} списком")
+    @Когда("Пользователь выбирает отображение {string} списком")
     public void switchToListView(String displayType) {
         officesPage.switchToListView();
     }
 
-    @Когда("я ищу офис по адресу {string}")
+    @Когда("Пользователь ищет офис по адресу {string}")
     public void searchOffice(String address) {
         officesPage.searchOffice(address);
     }
 
-    @Когда("я кликаю по тексту {string}")
+    @Когда("Пользователь кликает по тексту {string}")
     public void clickOnText(String text) {
         mainPage.clickOnText(text);
     }
 
-    @Тогда("я должен найти офис {string}")
+    @Тогда("Пользователь должен найти офис {string}")
     public void я_должен_найти_офис(String expectedOfficeName) {
         WebElement header = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//h3[contains(text(), '" + expectedOfficeName + "')]")));
-        assertThat(header.getText()).isEqualTo(expectedOfficeName)
-                .withFailMessage("Заголовок найденного офиса должен быть '" + expectedOfficeName + "'");
+        assertThat(header.getText())
+                .withFailMessage("Заголовок найденного офиса должен быть '" + expectedOfficeName + "'")
+                .isEqualTo(expectedOfficeName);
+
     }
 
-    @Когда("я кликаю по ссылке {string}")
+    @Когда("Пользователь кликает по ссылке {string}")
     public void clickLink(String linkText) {
         mainPage.clickLink(linkText);
     }
 
-    @Когда("я кликаю на кнопку {string}")
+    @Когда("Пользователь кликает на кнопку {string}")
     public void clickButton(String buttonText) {
         mainPage.clickButton(buttonText);
     }
 
-    @Тогда("я должен быть на странице {string}")
+    @Тогда("Пользователь должен быть на странице {string}")
     public void я_должен_быть_на_странице(String expectedUrl) {
         wait.until(ExpectedConditions.urlToBe(expectedUrl));
         assertThat(driver.getCurrentUrl())
-                .isEqualTo(expectedUrl)
-                .withFailMessage("URL должен соответствовать ожидаемой странице");
+                .withFailMessage("URL должен соответствовать ожидаемой странице")
+                .isEqualTo(expectedUrl);
+
     }
 
-    @Когда("я кликаю на стрелку для раскрытия меню")
+    @Когда("Пользователь кликает на стрелку для раскрытия меню")
     public void clickArrowButton() {
         mainPage.clickArrowButton();
     }
 
-    @Когда("я ввожу {string} в поле ввода валюты")
+    @Когда("Пользователь вводит {string} в поле ввода валюты")
     public void enterCurrencyValue(String value) {
         mainPage.enterCurrencyValue(value);
     }
 
-    @Когда("я кликаю на кнопку входа")
+    @Когда("Пользователь кликает на кнопку входа")
     public void clickLoginButton() {
         mainPage.clickLoginButton();
     }
 
-    @Когда("я выбираю Интернет банк ФЛ")
+    @Когда("Пользователь выбирает Интернет банк ФЛ")
     public void selectInternetBankFL() {
         loginPage.selectInternetBankFL();
     }
 
-    @Когда("я переключаюсь между вкладками")
+    @Когда("Пользователь переключается между вкладками")
     public void switchBetweenTabs() {
         mainPage.switchToNewTab();
     }
 
-    @Тогда("я должен увидеть заголовок Вход в интернет банк")
+    @Тогда("Пользователь должен увидеть заголовок Вход в интернет банк")
     public void verifyLoginHeader() {
-        assertThat(loginPage.getLoginHeaderText()).isEqualTo("Вход в интернет-банк");
+        assertThat(loginPage.getLoginHeaderText())
+                .withFailMessage("Искомый заголовок отсутствует")
+                .isEqualTo("Вход в интернет-банк");
     }
 
-    @Когда("я кликаю по иконке поиска")
+    @Когда("Пользователь кликает по иконке поиска")
     public void clickSearchIcon() {
         mainPage.clickSearchIcon();
     }
 
-    @Когда("я ввожу поисковый запрос {string}")
+    @Когда("Пользователь вводит поисковый запрос {string}")
     public void enterSearchQuery(String query) {
         searchPage.enterSearchQuery(query);
     }
 
     @Тогда("поле поиска должно содержать текст {string}")
     public void verifySearchFieldText(String expectedText) {
-        assertThat(searchPage.getSearchText()).isEqualTo(expectedText);
+        assertThat(searchPage.getSearchText())
+                .withFailMessage("Поле поиска не содержит {string}")
+                .as("Поле поиска не содержит {string}")
+                .isEqualTo(expectedText);
     }
 
     @Тогда("Данные пользователя не совпадают")
@@ -174,7 +184,9 @@ public class MyStepDefinitions {
                 .password("qwerty123").age(30).gender(0).active(true).build();
         Users secondUser = Users.builder().firstName("victor").lastName("daniel").email("vd@gmail.com")
                 .password("qwerty123").age(31).gender(0).active(true).build();
-        assertThat(firstUser).usingRecursiveComparison().isEqualTo(secondUser);
+        assertThat(firstUser).usingRecursiveComparison()
+                .withFailMessage("Данные пользователей не совпадают")
+                .isEqualTo(secondUser);
     }
 
     @Тогда("Данные пользователя совпадают")
@@ -183,7 +195,9 @@ public class MyStepDefinitions {
                 .password("qwerty123").age(30).gender(0).active(true).build();
         Users secondUser = Users.builder().firstName("victor").lastName("daniel").email("vd@gmail.com")
                 .password("qwerty123").age(30).gender(0).active(true).build();
-        assertThat(firstUser).usingRecursiveComparison().isEqualTo(secondUser);
+        assertThat(firstUser).usingRecursiveComparison()
+                .withFailMessage("Данные пользователся не совпадают")
+                .isEqualTo(secondUser);
     }
 
     @Тогда("Коллекция по запросу соответствует требованиям")
@@ -194,7 +208,7 @@ public class MyStepDefinitions {
         assertThat(actualOfficeDataModel)
                 .as("Проверка полного соответствия данных об обменных пунктах")
                 .usingRecursiveComparison()
-                .withFailMessage("Данные об обменных пунктах не соответствуют ожидаемым. Проверьте актуальность тестовых данных.")
+                .withFailMessage("Данные об обменных пунктах не соответствуют актуальным")
                 .isEqualTo(expectedOfficeDataModel);
     }
 
@@ -209,7 +223,9 @@ public class MyStepDefinitions {
                 .ignoringFields("items.address", "items.id", "items.name")
                 .ignoringFields("items.rates.cbRate", "items.rates.currencyCodeSecond",
                         "items.rates.lotSize", "items.rates.transactionVolume")
+                .withFailMessage("Курсы валют не соответствуют актуальным")
                 .isEqualTo(expectedData.getItems());
+
     }
 
 }
