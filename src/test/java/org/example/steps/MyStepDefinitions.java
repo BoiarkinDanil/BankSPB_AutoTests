@@ -106,7 +106,6 @@ public class MyStepDefinitions {
         assertThat(header.getText())
                 .withFailMessage("Заголовок найденного офиса должен быть '" + expectedOfficeName + "'")
                 .isEqualTo(expectedOfficeName);
-
     }
 
     @Когда("Пользователь кликает по ссылке {string}")
@@ -125,7 +124,6 @@ public class MyStepDefinitions {
         assertThat(driver.getCurrentUrl())
                 .withFailMessage("URL должен соответствовать ожидаемой странице")
                 .isEqualTo(expectedUrl);
-
     }
 
     @Когда("Пользователь кликает на стрелку для раскрытия меню")
@@ -172,19 +170,25 @@ public class MyStepDefinitions {
 
     @Тогда("поле поиска должно содержать текст {string}")
     public void verifySearchFieldText(String expectedText) {
-        assertThat(searchPage.getSearchText())
-                .withFailMessage("Поле поиска не содержит {string}")
-                .as("Поле поиска не содержит {string}")
+        String actualText = searchPage.getSearchText();
+        assertThat(actualText)
+                .withFailMessage("Ожидаемый текст в поле поиска: '%s', но фактический текст: '%s'",
+                        expectedText, actualText)
                 .isEqualTo(expectedText);
     }
 
     @Тогда("Данные пользователя не совпадают")
     public void verifyUserDataNotMatch() {
-        Users firstUser = Users.builder().firstName("victor").lastName("daniel").email("vd@gmail.com")
+        Users firstUser = Users.builder()
+                .firstName("victor").lastName("daniel").email("vd@gmail.com")
                 .password("qwerty123").age(30).gender(0).active(true).build();
-        Users secondUser = Users.builder().firstName("victor").lastName("daniel").email("vd@gmail.com")
+
+        Users secondUser = Users.builder()
+                .firstName("victor").lastName("daniel").email("vd@gmail.com")
                 .password("qwerty123").age(31).gender(0).active(true).build();
-        assertThat(firstUser).usingRecursiveComparison()
+
+        assertThat(firstUser)
+                .usingRecursiveComparison()
                 .withFailMessage("Данные пользователей не совпадают")
                 .isEqualTo(secondUser);
     }
@@ -195,7 +199,9 @@ public class MyStepDefinitions {
                 .password("qwerty123").age(30).gender(0).active(true).build();
         Users secondUser = Users.builder().firstName("victor").lastName("daniel").email("vd@gmail.com")
                 .password("qwerty123").age(30).gender(0).active(true).build();
-        assertThat(firstUser).usingRecursiveComparison()
+
+        assertThat(firstUser)
+                .usingRecursiveComparison()
                 .withFailMessage("Данные пользователся не совпадают")
                 .isEqualTo(secondUser);
     }
@@ -205,6 +211,7 @@ public class MyStepDefinitions {
         Response response = GetExchangeOfficesRequest.performGet();
         OfficeDataModel actualOfficeDataModel = response.body().as(OfficeDataModel.class);
         OfficeDataModel expectedOfficeDataModel = JsonParser.readJson("src/test/resources/Expected/Offices.json", OfficeDataModel.class);
+
         assertThat(actualOfficeDataModel)
                 .as("Проверка полного соответствия данных об обменных пунктах")
                 .usingRecursiveComparison()
